@@ -101,7 +101,8 @@
     -webkit-user-select: none;
     -webkit-touch-callout: none;
   }
-  .photo img { display: block; width: 100%; height: 100%; pointer-events: none; }
+  .photo img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+  .photo.circle, .photo.circle img { border-radius: 50%; }
   .handle { display: none; }
 
   /* ---------- Edit mode ---------- */
@@ -120,6 +121,7 @@
     touch-action: none;
     cursor: nwse-resize;
   }
+  #main.editing .photo.circle.selected .handle { right: calc(14.6% - 16px); bottom: calc(14.6% - 16px); }
   #main.editing .box { cursor: text; outline: 2px dashed #1e88ff; }
   .toolbar {
     display: none;
@@ -135,7 +137,7 @@
   .toolbar button, .toolbar label {
     flex: 1;
     padding: 14px 4px;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
     text-align: center;
     border: none;
@@ -188,6 +190,7 @@
   <div class="toolbar">
     <label class="blue" for="fileInput">+ Photo</label>
     <input type="file" id="fileInput" accept="image/*" multiple hidden>
+    <button class="blue" id="shapeBtn" disabled>◯ Circle</button>
     <button class="red" id="deleteBtn" disabled>Delete</button>
     <button class="grey" id="doneBtn">Done</button>
   </div>
@@ -235,7 +238,8 @@
     el.style.left = (p.data.x * 100) + "cqw";
     el.style.top = (p.data.y * 100) + "cqw";
     el.style.width = (p.data.w * 100) + "cqw";
-    el.style.height = (p.data.w * p.data.ratio * 100) + "cqw";
+    el.style.height = (p.data.w * shapeRatio(p) * 100) + "cqw";
+    el.classList.toggle("circle", p.data.shape === "circle");
     el.style.zIndex = p.data.z;
   }
 
@@ -262,6 +266,8 @@
     selected = p;
     if (p) p.el.classList.add("selected");
     $("deleteBtn").disabled = !p;
+    $("shapeBtn").disabled = !p;
+    $("shapeBtn").textContent = p && p.data.shape === "circle" ? "▢ Normal" : "◯ Circle";
   }
 
   // Shrink big camera photos so storage stays small and fast
@@ -310,6 +316,23 @@
       }
     }
   });
+
+  // Circles are cropped to a square from the middle of the photo
+  function shapeRatio(p) {
+    return p.data.shape === "circle" ? 1 : p.data.ratio;
+  }
+
+  $("shapeBtn").onclick = async () => {
+    if (!selected) return;
+    const p = selected;
+    const oldH = p.data.w * shapeRatio(p);
+    p.data.shape = p.data.shape === "circle" ? "rect" : "circle";
+    // Keep it centred on the same spot when switching
+    p.data.y += (oldH - p.data.w * shapeRatio(p)) / 2;
+    place(p);
+    select(p);
+    await putPhoto(p.data);
+  };
 
   $("deleteBtn").onclick = async () => {
     if (!selected) return;
@@ -372,7 +395,7 @@
       } else if (start.pts[0] && start.pts[0].resize) {
         // Corner handle: resize keeping the photo's shape
         const dx = (cur.x - start.pts[0].x) / W;
-        const dy = (cur.y - start.pts[0].y) / W / p.data.ratio;
+        const dy = (cur.y - start.pts[0].y) / W / shapeRatio(p);
         p.data.w = Math.min(3, Math.max(0.08, start.w + Math.max(dx, dy)));
       } else if (start.pts[0]) {
         p.data.x = start.x + (cur.x - start.pts[0].x) / W;
