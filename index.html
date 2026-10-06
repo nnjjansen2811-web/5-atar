@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="5 Atar">
 <title>5 Atar</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -44,15 +48,15 @@
   .red { background: #d42a2a; }
 
   /* ---------- Main screen (built on a 1026 x 2000 design grid) ---------- */
-  #main { background: #fff; overflow-y: auto; }
+  /* The screen is sized to exactly fill an iPhone 12 Pro (390 x 844).
+     On other phones it scales to fit, keeping the same shape. */
+  #main { background: #fff; overflow: hidden; }
   .frame {
     container-type: inline-size;
     position: relative;
-    width: 100%;
-    max-width: 520px;
+    width: min(100vw, 100dvh * 390 / 844);
+    aspect-ratio: 390 / 844;
     margin: 0 auto;
-    min-height: 100%;
-    aspect-ratio: 1026 / 2000;
     overflow: hidden;
   }
   .header { position: absolute; top: 0; left: 0; width: 100%; display: block; }
@@ -106,7 +110,6 @@
   .handle { display: none; }
 
   /* ---------- Edit mode ---------- */
-  #main.editing .frame { margin-bottom: 90px; }
   #main.editing .photo { touch-action: none; cursor: move; outline: 1px dashed rgba(0,0,0,.35); }
   #main.editing .photo.selected { outline: 3px solid #1e88ff; z-index: 1000 !important; }
   #main.editing .photo.selected .handle {
