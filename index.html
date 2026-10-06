@@ -13,13 +13,21 @@
 <title>5 Atar</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; background: #fff; }
+  /* Red behind everything so the iPhone's status-bar fade at the top blends into the header */
+  html, body { height: 100%; background: #ae2024; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     -webkit-tap-highlight-color: transparent;
     overflow: hidden;
   }
-  .screen { display: none; position: fixed; inset: 0; }
+  /* 100lvh = the full screen height, including the strip at the very bottom
+     that iPhone leaves out of "100%" when opened from the Home Screen */
+  .screen {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: max(100%, 100lvh);
+  }
   .screen.active { display: block; }
 
   /* ---------- Menu ---------- */
@@ -69,6 +77,24 @@
     overflow: hidden;
   }
   .header { position: absolute; top: 0; left: 0; width: 100%; display: block; }
+
+  /* Two half rings spinning in the cut-out circle (centre 513,550 on the 1026 grid) */
+  .rings {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    display: block;
+    pointer-events: none;
+  }
+  .ring {
+    fill: none;
+    transform-box: view-box;
+    transform-origin: 513px 550px;
+    animation: spin 3s linear infinite;
+  }
+  .ring-inner { stroke: #ae2024; }                                  /* clockwise */
+  .ring-outer { stroke: rgba(174, 32, 36, 0.4); animation-direction: reverse; } /* counter-clockwise */
+  @keyframes spin { to { transform: rotate(360deg); } }
   .box {
     position: absolute;
     background: #edf0f4;
@@ -200,6 +226,11 @@
   <div class="frame" id="frame">
     <svg class="header" viewBox="0 0 1026 600" aria-hidden="true">
       <path fill="#ae2024" d="M0,0 H1026 V558 a40,40 0 0 1 -40,40 H782 a40,40 0 0 1 -40,-40 V550 A228.5,228.5 0 0 0 285,550 V558 a40,40 0 0 1 -40,40 H40 a40,40 0 0 1 -40,-40 Z"/>
+    </svg>
+    <svg class="rings" viewBox="0 0 1026 1026" aria-hidden="true">
+      <!-- dash = half the circumference, so each ring covers half the circle -->
+      <circle class="ring ring-inner" cx="513" cy="550" r="157" stroke-width="38" stroke-dasharray="493.3 1000"/>
+      <circle class="ring ring-outer" cx="513" cy="550" r="201" stroke-width="40" stroke-dasharray="631.5 1300"/>
     </svg>
     <div class="box box1" id="box1Text"></div>
     <div class="clock" id="clock"></div>
