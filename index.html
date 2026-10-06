@@ -172,13 +172,27 @@
     display: none;
     position: fixed;
     left: 0; right: 0; bottom: 0;
+    flex-wrap: wrap;
     gap: 6px;
-    padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
+    padding: 0 10px calc(12px + env(safe-area-inset-bottom));
     background: rgba(255,255,255,.95);
     border-top: 1px solid #ddd;
+    box-shadow: 0 -4px 14px rgba(0,0,0,.12);
     z-index: 2000;
   }
+  /* Once dragged off the bottom it floats, so give it a full border */
+  .toolbar.moved { bottom: auto; border: 1px solid #ddd; border-radius: 16px; margin: 0 6px; padding-bottom: 12px; }
   #main.editing .toolbar { display: flex; }
+  .grip {
+    flex-basis: 100%;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+    cursor: grab;
+  }
+  .grip::before { content: ""; width: 48px; height: 5px; border-radius: 3px; background: #bbb; }
   .toolbar button, .toolbar label {
     flex: 1;
     padding: 14px 2px;
@@ -239,8 +253,9 @@
     <div class="box box2" id="box2Text"></div>
   </div>
 
-  <div class="hint">Drag to move · blue dot or pinch to resize · tap grey box to type in it</div>
-  <div class="toolbar">
+  <div class="hint">Drag to move · blue dot or pinch to resize · drag the grey bar to move this menu</div>
+  <div class="toolbar" id="toolbar">
+    <div class="grip" id="grip" title="Drag to move the menu"></div>
     <label class="blue" for="fileInput">+ Photo</label>
     <input type="file" id="fileInput" accept="image/*" multiple hidden>
     <button class="blue" id="textBtn">+ Text</button>
@@ -551,6 +566,45 @@
   $("startBtn").onclick = () => location.hash = "main";
   $("editBtn").onclick = () => location.hash = "edit";
   $("doneBtn").onclick = () => location.hash = "menu";
+
+  /* ---------- Drag the edit menu up and down (remembers where you left it) ---------- */
+  const toolbar = $("toolbar");
+  function setToolbarTop(top) {
+    const max = window.innerHeight - toolbar.offsetHeight;
+    if (top === null || top >= max - 4) {          // snapped back to the bottom
+      toolbar.classList.remove("moved");
+      toolbar.style.top = "";
+      return null;
+    }
+    toolbar.classList.add("moved");
+    top = Math.max(0, top);
+    toolbar.style.top = top + "px";
+    return top;
+  }
+  let gripStart = null;
+  $("grip").addEventListener("pointerdown", e => {
+    e.preventDefault();
+    $("grip").setPointerCapture(e.pointerId);
+    gripStart = { y: e.clientY, top: toolbar.getBoundingClientRect().top };
+  });
+  $("grip").addEventListener("pointermove", e => {
+    if (gripStart) setToolbarTop(gripStart.top + e.clientY - gripStart.y);
+  });
+  const gripEnd = () => {
+    if (!gripStart) return;
+    gripStart = null;
+    const top = toolbar.classList.contains("moved") ? toolbar.getBoundingClientRect().top / window.innerHeight : null;
+    try { localStorage.setItem("toolbarTop", top === null ? "" : String(top)); } catch (e) {}
+  };
+  $("grip").addEventListener("pointerup", gripEnd);
+  $("grip").addEventListener("pointercancel", gripEnd);
+  function restoreToolbar() {
+    let saved = "";
+    try { saved = localStorage.getItem("toolbarTop") || ""; } catch (e) {}
+    setToolbarTop(saved === "" ? null : parseFloat(saved) * window.innerHeight);
+  }
+  window.addEventListener("hashchange", () => { if (location.hash === "#edit") restoreToolbar(); });
+  if (location.hash === "#edit") restoreToolbar();
 
   /* ---------- Press and hold the start screen to get back to the menu ---------- */
   let holdTimer = null, holdX = 0, holdY = 0;
