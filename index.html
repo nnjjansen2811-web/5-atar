@@ -88,12 +88,13 @@
   }
   .ring {
     fill: none;
+    stroke-linecap: round;
     transform-box: view-box;
     transform-origin: 513px 550px;
     animation: spin 3s linear infinite;
   }
   .ring-inner { stroke: #ae2024; }                                  /* clockwise */
-  .ring-outer { stroke: rgba(174, 32, 36, 0.4); animation-direction: reverse; } /* counter-clockwise */
+  .ring-outer { stroke: rgba(174, 32, 36, 0.25); animation-direction: reverse; } /* counter-clockwise */
   @keyframes spin { to { transform: rotate(360deg); } }
   .box {
     position: absolute;
@@ -228,9 +229,10 @@
       <path fill="#ae2024" d="M0,0 H1026 V558 a40,40 0 0 1 -40,40 H782 a40,40 0 0 1 -40,-40 V550 A228.5,228.5 0 0 0 285,550 V558 a40,40 0 0 1 -40,40 H40 a40,40 0 0 1 -40,-40 Z"/>
     </svg>
     <svg class="rings" viewBox="0 0 1026 1026" aria-hidden="true">
-      <!-- dash = half the circumference, so each ring covers half the circle -->
-      <circle class="ring ring-inner" cx="513" cy="550" r="157" stroke-width="38" stroke-dasharray="493.3 1000"/>
-      <circle class="ring ring-outer" cx="513" cy="550" r="201" stroke-width="40" stroke-dasharray="631.5 1300"/>
+      <!-- dash = half the circumference minus the stroke width (the rounded ends add
+           half a stroke at each end), so each ring still covers half the circle -->
+      <circle class="ring ring-inner" cx="513" cy="550" r="151.5" stroke-width="27" stroke-dasharray="448.9 1000"/>
+      <circle class="ring ring-outer" cx="513" cy="550" r="200.5" stroke-width="25" stroke-dasharray="604.9 1300"/>
     </svg>
     <div class="box box1" id="box1Text"></div>
     <div class="clock" id="clock"></div>
